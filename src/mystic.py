@@ -63,7 +63,7 @@ class MysticSquare:
             print(f"Inversion count of {i}: {inversion_count}")
             self.__inversion_count += inversion_count
 
-        if self.__tiles.index("-") % 8 in (2, 3, 4, 6):
+        if self.__tiles.index("-") % 8 in (1, 3, 4, 6):
             self.__inversion_count += 1
 
         print()
@@ -79,52 +79,56 @@ class MysticSquare:
             self.__time -= timeit.default_timer()
             self.__time *= -1
 
-    def __build_tree(self, start_instance, depth=1):
-        blank_index = start_instance.index("-")
-        for move in self.__VALID_MOVES:
-            tile_instance = copy.deepcopy(start_instance)
+    def __build_tree(self, start_instance, depth=-1):
+        while True:
+            blank_index = start_instance.index("-")
+            for move in self.__VALID_MOVES:
+                tile_instance = copy.deepcopy(start_instance)
 
-            if move == "up" and blank_index not in (0, 1, 2, 3):
-                (tile_instance[blank_index],
-                 tile_instance[blank_index - 4]) = (tile_instance[blank_index - 4],
-                                                    tile_instance[blank_index])
-                self.__node_count += 1
-            elif move == "right" and blank_index not in (3, 7, 11, 15):
-                (tile_instance[blank_index],
-                 tile_instance[blank_index + 1]) = (tile_instance[blank_index + 1],
-                                                    tile_instance[blank_index])
-                self.__node_count += 1
-            elif move == "down" and blank_index not in (12, 13, 14, 15):
-                (tile_instance[blank_index],
-                 tile_instance[blank_index + 4]) = (tile_instance[blank_index + 4],
-                                                    tile_instance[blank_index])
-                self.__node_count += 1
-            elif move == "left" and blank_index not in (0, 4, 8, 12):
-                (tile_instance[blank_index],
-                 tile_instance[blank_index - 1]) = (tile_instance[blank_index - 1],
-                                                    tile_instance[blank_index])
-                self.__node_count += 1
+                if move == "up" and blank_index not in (0, 1, 2, 3):
+                    (tile_instance[blank_index],
+                     tile_instance[blank_index - 4]) = (tile_instance[blank_index - 4],
+                                                        tile_instance[blank_index])
+                    self.__node_count += 1
+                elif move == "right" and blank_index not in (3, 7, 11, 15):
+                    (tile_instance[blank_index],
+                     tile_instance[blank_index + 1]) = (tile_instance[blank_index + 1],
+                                                        tile_instance[blank_index])
+                    self.__node_count += 1
+                elif move == "down" and blank_index not in (12, 13, 14, 15):
+                    (tile_instance[blank_index],
+                     tile_instance[blank_index + 4]) = (tile_instance[blank_index + 4],
+                                                        tile_instance[blank_index])
+                    self.__node_count += 1
+                elif move == "left" and blank_index not in (0, 4, 8, 12):
+                    (tile_instance[blank_index],
+                     tile_instance[blank_index - 1]) = (tile_instance[blank_index - 1],
+                                                        tile_instance[blank_index])
+                    self.__node_count += 1
+                else:
+                    continue
+
+                cost = self.__calculate_cost(tile_instance, depth)
+                heapq.heappush(self.__moves, (cost, depth, tile_instance))
+
+            next_instance = heapq.heappop(self.__moves)
+            self.__solution_stack.append(next_instance)
+            if tuple(next_instance[2]) == self.__SOLUTION:
+                for i in range(len(self.__moves)):
+                    if self.__moves[i][0] > next_instance[0]:
+                        self.__moves = copy.deepcopy(self.__moves[:i])
+                        break
+                if len(self.__moves) > 1:
+                    next_instance = heapq.heappop(self.__moves)
+                    for _ in range(depth - next_instance[1]):
+                        self.__solution_stack.pop()
+                    start_instance = copy.deepcopy(next_instance[2])
+                    depth = next_instance[1] - 1
+                else:
+                    break
             else:
-                continue
-
-            cost = self.__calculate_cost(tile_instance, depth)
-            heapq.heappush(self.__moves, (cost, depth, tile_instance))
-
-        next_instance = heapq.heappop(self.__moves)
-        self.__solution_stack.append(next_instance)
-        if tuple(next_instance[2]) == self.__SOLUTION:
-            tree_leaves = copy.deepcopy(self.__moves)
-            for instance in tree_leaves:
-                if instance[0] > next_instance[0]:
-                    self.__moves.remove(instance)
-            if len(self.__moves) > 1:
-                next_instance = heapq.heappop(self.__moves)
-                depth -= next_instance[1]
-                for _ in range(depth):
-                    self.__solution_stack.pop()
-                self.__build_tree(next_instance[2], depth)
-        else:
-            self.__build_tree(next_instance[2], depth + 1)
+                start_instance = copy.deepcopy(next_instance[2])
+                depth = next_instance[1] - 1
 
     @staticmethod
     def __calculate_cost(instance, depth):
@@ -136,7 +140,7 @@ class MysticSquare:
             elif instance[i] != str(i + 1):
                 incorrect_position += 1
 
-        return incorrect_position + depth
+        return incorrect_position - depth
 
     def print_solution(self):
         if self.__solution_stack:
@@ -145,5 +149,6 @@ class MysticSquare:
             for i in range(len(self.__solution_stack)):
                 self.display_mystic_square(self.__solution_stack[i][2])
 
+            print(f"Steps required: {len(self.__solution_stack)}")
             print(f"Execution time: {self.__time} s")
             print(f"Nodes generated: {self.__node_count}")
