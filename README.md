@@ -9,7 +9,9 @@ branch-and-bound algorithm.
 2. Running the program  
    1. To run without input file, use `python mystic_square_solver.py`
    2. To run with input file, ensure the test file is located in
-   the `test` directory and use `python mystic_square_solver.py --source <file_name>`
+   the `test` directory and use `python mystic_square_solver.py --source <file_name>`  
+3. Note that the program might take a while to find a solution 
+   due to the choice of heuristic bound
 
 ## Author
 Jeremy Simbolon ([@tastytypist](https://github.com/tastytypist))  
