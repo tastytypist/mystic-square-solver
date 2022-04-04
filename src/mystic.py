@@ -39,9 +39,11 @@ class MysticSquare:
 
         return mystic_tiles
 
-    def display_mystic_square(self):
-        for i in range(len(self.__tiles)):
-            print(self.__tiles[i], end="")
+    def display_mystic_square(self, tiles=None):
+        if not tiles:
+            tiles = self.__tiles
+        for i in range(len(tiles)):
+            print(tiles[i], end="")
             if i % 4 != 3:
                 print(end=" ")
             else:
@@ -49,6 +51,7 @@ class MysticSquare:
         print()
 
     def solvable_check(self):
+        self.__time = timeit.default_timer()
         for i in range(1, 17):
             inversion_count = 0
             if i == 16:
@@ -72,12 +75,9 @@ class MysticSquare:
             print("Mystic square is not solvable :(")
         else:
             start_instance = copy.deepcopy(self.__tiles)
-
-            start = timeit.default_timer()
             self.__build_tree(start_instance)
-            end = timeit.default_timer()
-
-            self.__time = start - end
+            self.__time -= timeit.default_timer()
+            self.__time *= -1
 
     def __build_tree(self, start_instance, depth=1):
         blank_index = start_instance.index("-")
@@ -139,4 +139,11 @@ class MysticSquare:
         return incorrect_position + depth
 
     def print_solution(self):
-        pass
+        if self.__solution_stack:
+            print("Solution steps:\n")
+            self.display_mystic_square()
+            for i in range(len(self.__solution_stack)):
+                self.display_mystic_square(self.__solution_stack[i][2])
+
+            print(f"Execution time: {self.__time} s")
+            print(f"Nodes generated: {self.__node_count}")
